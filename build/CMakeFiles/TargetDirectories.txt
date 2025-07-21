@@ -1,0 +1,3 @@
+/Users/greenbox/projects/C SDL stuff/build/CMakeFiles/Sandbox.dir
+/Users/greenbox/projects/C SDL stuff/build/CMakeFiles/edit_cache.dir
+/Users/greenbox/projects/C SDL stuff/build/CMakeFiles/rebuild_cache.dir

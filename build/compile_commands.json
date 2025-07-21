@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/Users/greenbox/projects/C SDL stuff/build",
+  "command": "/usr/bin/cc  -I/Library/Frameworks/SDL2.framework/Versions/A/Headers -I/Library/Frameworks/SDL2_image.framework/Versions/A/Headers -I/Library/Frameworks/SDL2_ttf.framework/Versions/A/Headers -F/Library/Frameworks -g -arch arm64 -o CMakeFiles/Sandbox.dir/main.c.o -c \"/Users/greenbox/projects/C SDL stuff/main.c\"",
+  "file": "/Users/greenbox/projects/C SDL stuff/main.c",
+  "output": "CMakeFiles/Sandbox.dir/main.c.o"
+}
+]
