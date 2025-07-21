@@ -7,51 +7,36 @@
 
 SDL_Window* window;
 SDL_Renderer* renderer;
-int x=0,y=0;
-float xvelocity=0,yvelocity=0;
+SDL_Surface* playerSurface;
+SDL_Texture* playerTexture;
+int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,playertexturex=1,playertexturey=1;
 bool right=false,up=false,left=false,down=false,z=false;
-SDL_Rect playerrect = { 0, 0, 16 ,16 },tilerect={0,0,16,16};
+SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16};
 int lastTick = 0,currentmap=0;
-unsigned char tilemap[5][15][16]={{
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}},
-  {
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+unsigned char tilemap[5][9][10]={{
+  {1,1,1,1,1,1,1,1,1,1},
+  {1,0,0,0,0,0,0,0,0,1},
+  {1,1,1,0,0,0,0,0,0,1},
+  {1,0,0,0,0,0,0,0,0,1},
+  {1,0,0,1,1,1,0,0,0,1},
+  {1,0,0,0,0,0,0,0,0,1},
+  {1,0,0,0,0,0,1,1,1,1},
+  {1,0,0,0,0,0,0,0,0,1},
+  {1,1,1,1,1,1,1,1,1,1}},
 };
 const int interval = 1000; // 1초 간격
 
 int Init(){
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow("Time stops for no one",
-  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 256, 240, SDL_WINDOW_SHOWN);
+  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160, 144, SDL_WINDOW_SHOWN);
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+  playerSurface = IMG_Load("res/char.png");
+  if (playerSurface == NULL) {
+  printf("이미지 불러오기 실패\n%s\n", SDL_GetError());
+  return 1;
+  }
+  playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
   return 0;
 }
 
@@ -86,17 +71,35 @@ return 0;
 }
 
 void update(){
-  if(left)xvelocity=-3;
-  else if(right)xvelocity=3;
-  else xvelocity=0;
-  if((xvelocity>0&&tilemap[currentmap][y/16][x/16+1]==1)||(xvelocity<0&&tilemap[currentmap][y/16][x/16]==1))xvelocity=0;
-  if(tilemap[currentmap][1+y/16][x/16]==0&&tilemap[currentmap][1+y/16][1+x/16]==0)yvelocity+=0.5f;
-  else if(z){yvelocity=-10;z=false;}
-  else {yvelocity=0;y/=16;y*=16;}
-  x+=xvelocity;
-  y+=yvelocity;
-  playerrect.x=x;
-  playerrect.y=y;
+  if(moveanim>0){
+    if(walkanim>0)walkanim--;
+    else walkanim=32;
+    moveanim--;
+    if(moveanim==0){
+      switch(dir){
+        case 0:{tiley--;break;}
+        case 1:{tilex++;break;}
+        case 2:{tiley++;break;}
+        case 3:{tilex--;break;}
+      }
+    }
+  }
+  if(moveanim==0){
+    if(up&&(tilemap[currentmap][tiley-1][tilex]==0)){moveanim=8;dir=0;}
+    else if(right&&(tilemap[currentmap][tiley][tilex+1]==0)){moveanim=8;dir=1;}
+    else if(left&&(tilemap[currentmap][tiley][tilex-1]==0)){moveanim=8;dir=3;}
+    else if(down&&(tilemap[currentmap][tiley+1][tilex]==0)){moveanim=8;dir=2;}
+  }
+  if(moveanim==0)walkanim=0;
+  if(walkanim>24)playertexturerect.x=playertexturex*72;
+  else if(walkanim>16)playertexturerect.x=playertexturex*72+24;
+  else if(walkanim>8)playertexturerect.x=playertexturex*72+48;
+  else playertexturerect.x=playertexturex*72+24;
+  int temp=dir*32;
+  temp+=playertexturey*128;
+  playertexturerect.y=temp;
+  playerrect.x=tilex*16+2*((dir==3&&moveanim>0)?-8+moveanim:((dir==1&&moveanim>0)?8-moveanim:0))-4;
+  playerrect.y=tiley*16+2*((dir==0&&moveanim>0)?-8+moveanim:((dir==2&&moveanim>0)?8-moveanim:0))-16;
 }
 void render(){
   // 배경 새로 그리기
@@ -105,14 +108,15 @@ void render(){
   SDL_RenderClear(renderer);
 
   // 사각형 그리기
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255,255);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0,255);
   SDL_RenderFillRect(renderer, &playerrect);
 
-  for(int i=0;i<15;i++)
-  for(int j=0;j<16;j++){
+  for(int i=0;i<9;i++)
+  for(int j=0;j<10;j++){
     tilerect.x=j*16;tilerect.y=i*16;
     if(tilemap[currentmap][i][j]==1){SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);SDL_RenderFillRect(renderer, &tilerect);}}
   // 이미지 그리기
+  SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
   // 화면 업데이트
   SDL_RenderPresent(renderer);
 }
