@@ -851,7 +851,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "Sandbox"
+			"value" : "Time"
 		},
 		{
 			"name" : "CMAKE_PROJECT_VERSION",
@@ -4372,6 +4372,42 @@
 			],
 			"type" : "PATH",
 			"value" : "Tiff_DIR-NOTFOUND"
+		},
+		{
+			"name" : "Time_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/Users/greenbox/GitHub/Time-platformer/out/build/Clang 16.0.0 arm64-apple-darwin24.1.0"
+		},
+		{
+			"name" : "Time_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "Time_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/Users/greenbox/GitHub/Time-platformer"
 		},
 		{
 			"name" : "Vorbis_vorbisfile_COMPILE_OPTIONS",

@@ -29,8 +29,9 @@ const int interval = 1000; // 1초 간격
 int Init(){
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow("Time stops for no one",
-  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160, 144, SDL_WINDOW_SHOWN);
+  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160, 144, SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+  SDL_RenderSetLogicalSize(renderer,160,144);
   playerSurface = IMG_Load("res/char.png");
   if (playerSurface == NULL) {
   printf("이미지 불러오기 실패\n%s\n", SDL_GetError());

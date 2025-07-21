@@ -124,24 +124,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named Sandbox
+# Target rules for targets named Time
 
 # Build rule for target.
-Sandbox: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Sandbox
-.PHONY : Sandbox
+Time: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Time
+.PHONY : Time
 
 # fast build rule for target.
-Sandbox/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Sandbox.dir/build.make CMakeFiles/Sandbox.dir/build
-.PHONY : Sandbox/fast
+Time/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Time.dir/build.make CMakeFiles/Time.dir/build
+.PHONY : Time/fast
 
 main.o: main.c.o
 .PHONY : main.o
 
 # target to build an object file
 main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Sandbox.dir/build.make CMakeFiles/Sandbox.dir/main.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Time.dir/build.make CMakeFiles/Time.dir/main.c.o
 .PHONY : main.c.o
 
 main.i: main.c.i
@@ -149,7 +149,7 @@ main.i: main.c.i
 
 # target to preprocess a source file
 main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Sandbox.dir/build.make CMakeFiles/Sandbox.dir/main.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Time.dir/build.make CMakeFiles/Time.dir/main.c.i
 .PHONY : main.c.i
 
 main.s: main.c.s
@@ -157,7 +157,7 @@ main.s: main.c.s
 
 # target to generate assembly for a file
 main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Sandbox.dir/build.make CMakeFiles/Sandbox.dir/main.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Time.dir/build.make CMakeFiles/Time.dir/main.c.s
 .PHONY : main.c.s
 
 # Help Target
@@ -169,7 +169,7 @@ help:
 	@echo "... codegen"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... Sandbox"
+	@echo "... Time"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
