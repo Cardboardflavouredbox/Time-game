@@ -155,10 +155,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
+					"value" : "CXX compiler"
 				}
 			],
-			"type" : "UNINITIALIZED",
+			"type" : "STRING",
 			"value" : "/usr/bin/clang++"
 		},
 		{
@@ -251,10 +251,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
+					"value" : "C compiler"
 				}
 			],
-			"type" : "UNINITIALIZED",
+			"type" : "STRING",
 			"value" : "/usr/bin/clang"
 		},
 		{
@@ -4276,42 +4276,6 @@
 			],
 			"type" : "PATH",
 			"value" : "/opt/homebrew/lib/cmake/SDL2_ttf"
-		},
-		{
-			"name" : "Sandbox_BINARY_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/Users/greenbox/GitHub/Time-platformer/out/build/Clang 16.0.0 arm64-apple-darwin24.1.0"
-		},
-		{
-			"name" : "Sandbox_IS_TOP_LEVEL",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "ON"
-		},
-		{
-			"name" : "Sandbox_SOURCE_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/Users/greenbox/GitHub/Time-platformer"
 		},
 		{
 			"name" : "TIFF_INCLUDE_DIR",
