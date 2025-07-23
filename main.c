@@ -9,10 +9,10 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Surface* playerSurface;
 SDL_Texture* playerTexture;
-int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0;
+int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
 bool right=false,up=false,left=false,down=false,z=false;
 char dialogue[64][128]={};
-SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16};
+SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,64};
 int lastTick = 0,currentmap=0;
 unsigned char tilemap[5][9][10]={{
   {1,1,1,1,1,1,1,1,1,1},//0
@@ -126,11 +126,15 @@ void update(){
           case 3:{tempx--;break;}
         }
         switch(currentmap){
-        case 1:{
-          if(tempx==5&&tempy==2){dir=3;currentmap=0;}
-          break;
+          case 1:{
+            if(tempx==5&&tempy==2){
+              currentdialogue=0;dialoguesize=1;dialogueprogress=0;
+              char temp[55]="Test dialogue.";
+              strcpy(dialogue[0],temp);
+            }
+            break;
+          }
         }
-    }
       }
     }
     if(moveanim==0)walkanim=0;
@@ -173,6 +177,12 @@ void render(){
     if(tilemap[currentmap][i][j]==1){SDL_SetRenderDrawColor(renderer, 85, 85, 255, 255);SDL_RenderFillRect(renderer, &tilerect);}}
   // 이미지 그리기
   SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
+
+  if(currentdialogue<dialoguesize){
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(renderer,&dialoguerect);
+  }
+
   // 화면 업데이트
   SDL_RenderPresent(renderer);
 }
