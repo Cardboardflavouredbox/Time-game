@@ -8,11 +8,14 @@
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Surface* playerSurface;
+SDL_Surface* txtSurface;
 SDL_Texture* playerTexture;
+TTF_Font* font;
+SDL_Texture* txtTexture;
 int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
 bool right=false,up=false,left=false,down=false,z=false;
-char dialogue[64][128]={};
-SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,64};
+char dialogue[64][256]={};
+SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect;
 int lastTick = 0,currentmap=0;
 unsigned char tilemap[5][9][10]={{
   {1,1,1,1,1,1,1,1,1,1},//0
@@ -50,6 +53,13 @@ int Init(){
   return 1;
   }
   playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+  // 폰트 불러오기
+  TTF_Init();
+  font = TTF_OpenFont("res/Monocat_6x12.ttf", 12);
+  if (font == NULL) {
+  printf("폰트 불러오기 실패: %s\n", TTF_GetError());
+  return -1;
+  }
   return 0;
 }
 
@@ -85,6 +95,7 @@ return 0;
 
 void update(){
   if(currentdialogue<dialoguesize){
+    if(dialogueprogress<strlen(dialogue[currentdialogue]))dialogueprogress++;
   }
   else{
     if(moveanim>0){
@@ -179,8 +190,19 @@ void render(){
   SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
 
   if(currentdialogue<dialoguesize){
+    if(tiley>4)dialoguerect.y=0;
+    else dialoguerect.y=96;
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderFillRect(renderer,&dialoguerect);
+
+    char temp[256]={};
+    strcpy(temp,dialogue[currentdialogue]);
+    temp[dialogueprogress+1]='\0';
+    txtSurface = TTF_RenderText_Solid(font, temp, (SDL_Color){ 255, 255, 255, 255 });
+    txtTexture = SDL_CreateTextureFromSurface(renderer, txtSurface);
+    txtRect = (SDL_Rect){ 0, dialoguerect.y, txtSurface->w, txtSurface->h };
+    SDL_RenderCopy(renderer, txtTexture, NULL, &txtRect);
+    SDL_FreeSurface(txtSurface);
   }
 
   // 화면 업데이트
@@ -191,6 +213,8 @@ void Free(){
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   Mix_CloseAudio();
+  SDL_DestroyTexture(txtTexture);
+  TTF_CloseFont(font);
   SDL_Quit();
 }
 
