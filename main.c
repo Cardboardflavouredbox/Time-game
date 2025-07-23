@@ -3,26 +3,38 @@
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <stdbool.h>
-
+#include <string.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Surface* playerSurface;
 SDL_Texture* playerTexture;
-int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,playertexturex=1,playertexturey=1;
+int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0;
 bool right=false,up=false,left=false,down=false,z=false;
+char dialogue[64][128]={};
 SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16};
 int lastTick = 0,currentmap=0;
 unsigned char tilemap[5][9][10]={{
-  {1,1,1,1,1,1,1,1,1,1},
-  {1,0,0,0,0,0,0,0,0,1},
-  {1,1,1,0,0,0,0,0,0,1},
-  {1,0,0,0,0,0,0,0,0,1},
-  {1,0,0,1,1,1,0,0,0,1},
-  {1,0,0,0,0,0,0,0,0,1},
-  {1,0,0,0,0,0,1,1,1,1},
-  {1,0,0,0,0,0,0,0,0,1},
-  {1,1,1,1,1,1,1,1,1,1}},
+  {1,1,1,1,1,1,1,1,1,1},//0
+  {1,0,0,0,0,0,0,0,0,1},//1
+  {1,1,1,0,0,0,0,0,0,1},//2
+  {1,0,0,0,0,0,0,0,0,1},//3
+  {1,0,0,1,1,1,0,0,0,1},//4
+  {1,0,0,0,0,0,0,0,0,1},//5
+  {1,0,0,0,0,0,1,1,1,1},//6
+  {1,0,0,0,0,0,0,0,0,0},//7
+  {1,1,1,1,1,1,1,1,1,1}},//8
+/* 0 1 2 3 4 5 6 7 8 9*/{
+  {1,1,1,1,1,1,1,1,1,1},//0
+  {1,0,0,0,0,0,0,0,0,1},//1
+  {1,0,0,0,0,1,0,0,0,1},//2
+  {1,0,0,0,0,0,0,0,0,1},//3
+  {1,0,0,0,0,0,0,0,0,1},//4
+  {1,0,0,0,0,0,0,0,0,1},//5
+  {1,0,0,0,0,0,0,0,0,1},//6
+  {0,0,0,0,0,0,0,0,0,0},//7
+  {1,1,1,1,1,1,1,1,1,1}},//8
+/* 0 1 2 3 4 5 6 7 8 9*/
 };
 const int interval = 1000; // 1초 간격
 
@@ -72,30 +84,74 @@ return 0;
 }
 
 void update(){
-  if(moveanim>0){
-    if(walkanim>0)walkanim--;
-    else walkanim=32;
-    moveanim--;
+  if(currentdialogue<dialoguesize){
+  }
+  else{
+    if(moveanim>0){
+      if(walkanim>0)walkanim--;
+      else walkanim=32;
+      moveanim--;
+      if(moveanim==0){
+        switch(dir){
+          case 0:{tiley--;break;}
+          case 1:{tilex++;break;}
+          case 2:{tiley++;break;}
+          case 3:{tilex--;break;}
+        }
+      }
+    }
     if(moveanim==0){
-      switch(dir){
-        case 0:{tiley--;break;}
-        case 1:{tilex++;break;}
-        case 2:{tiley++;break;}
-        case 3:{tilex--;break;}
+      if(up){
+        if(tilemap[currentmap][tiley-1][tilex]==0)moveanim=8;
+        dir=0;
+        }
+      else if(right){
+        if(tilemap[currentmap][tiley][tilex+1]==0)moveanim=8;
+        dir=1;
+        }
+      else if(left){
+        if(tilemap[currentmap][tiley][tilex-1]==0)moveanim=8;
+        dir=3;
+        }
+      else if(down){
+        if(tilemap[currentmap][tiley+1][tilex]==0)moveanim=8;
+        dir=2;
+        }
+      else if(z){
+        int tempx=tilex,tempy=tiley;
+        switch(dir){
+          case 0:{tempy--;break;}
+          case 1:{tempx++;break;}
+          case 2:{tempy++;break;}
+          case 3:{tempx--;break;}
+        }
+        switch(currentmap){
+        case 1:{
+          if(tempx==5&&tempy==2){dir=3;currentmap=0;}
+          break;
+        }
+    }
+      }
+    }
+    if(moveanim==0)walkanim=0;
+    if(walkanim>24)playertexturerect.x=playertexturex*72;
+    else if(walkanim>16)playertexturerect.x=playertexturex*72+24;
+    else if(walkanim>8)playertexturerect.x=playertexturex*72+48;
+    else playertexturerect.x=playertexturex*72+24;
+    
+
+    switch(currentmap){
+      case 0:{
+        if(tilex==9&&tiley==7){tilex=1;tiley=7;dir=1;currentmap=1;}
+        break;
+      }
+      case 1:{
+        if(tilex==0&&tiley==7){tilex=8;tiley=7;dir=3;currentmap=0;}
+        break;
       }
     }
   }
-  if(moveanim==0){
-    if(up&&(tilemap[currentmap][tiley-1][tilex]==0)){moveanim=8;dir=0;}
-    else if(right&&(tilemap[currentmap][tiley][tilex+1]==0)){moveanim=8;dir=1;}
-    else if(left&&(tilemap[currentmap][tiley][tilex-1]==0)){moveanim=8;dir=3;}
-    else if(down&&(tilemap[currentmap][tiley+1][tilex]==0)){moveanim=8;dir=2;}
-  }
-  if(moveanim==0)walkanim=0;
-  if(walkanim>24)playertexturerect.x=playertexturex*72;
-  else if(walkanim>16)playertexturerect.x=playertexturex*72+24;
-  else if(walkanim>8)playertexturerect.x=playertexturex*72+48;
-  else playertexturerect.x=playertexturex*72+24;
+
   int temp=dir*32;
   temp+=playertexturey*128;
   playertexturerect.y=temp;
@@ -105,17 +161,16 @@ void update(){
 void render(){
   // 배경 새로 그리기
 
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 170, 255);
   SDL_RenderClear(renderer);
 
   // 사각형 그리기
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0,255);
   SDL_RenderFillRect(renderer, &playerrect);
 
   for(int i=0;i<9;i++)
   for(int j=0;j<10;j++){
     tilerect.x=j*16;tilerect.y=i*16;
-    if(tilemap[currentmap][i][j]==1){SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);SDL_RenderFillRect(renderer, &tilerect);}}
+    if(tilemap[currentmap][i][j]==1){SDL_SetRenderDrawColor(renderer, 85, 85, 255, 255);SDL_RenderFillRect(renderer, &tilerect);}}
   // 이미지 그리기
   SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
   // 화면 업데이트
