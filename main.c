@@ -13,7 +13,7 @@ SDL_Texture* playerTexture;
 TTF_Font* font;
 SDL_Texture* txtTexture;
 int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
-bool right=false,up=false,left=false,down=false,z=false;
+bool right=false,up=false,left=false,down=false,z=false,x=false;
 char dialogue[64][256]={};
 SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect;
 int lastTick = 0,currentmap=0;
@@ -64,12 +64,13 @@ int Init(){
 }
 
 int inputstuff(){
+  if(z)z=false;
+  if(x)x=false;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
   switch (event.type) {
   // 창 닫기 버튼을 누르면 종료
   case SDL_QUIT: return 1;
-
   case SDL_KEYDOWN:
     switch(event.key.keysym.sym){
         case SDLK_a: case SDLK_LEFT:{left=true;break;}
@@ -77,6 +78,7 @@ int inputstuff(){
         case SDLK_s: case SDLK_DOWN:{down=true;break;}
         case SDLK_w: case SDLK_UP:{up=true;break;}
         case SDLK_z:{z=true;break;}
+        case SDLK_x:{x=true;break;}
     }
     break;
   case SDL_KEYUP:
@@ -86,6 +88,7 @@ int inputstuff(){
         case SDLK_s: case SDLK_DOWN:{down=false;break;}
         case SDLK_w: case SDLK_UP:{up=false;break;}
         case SDLK_z:{z=false;break;}
+        case SDLK_x:{x=false;break;}
     }
   }
   break;
@@ -96,6 +99,7 @@ return 0;
 void update(){
   if(currentdialogue<dialoguesize){
     if(dialogueprogress<strlen(dialogue[currentdialogue]))dialogueprogress++;
+    else if(z){dialogueprogress=0;currentdialogue++;}
   }
   else{
     if(moveanim>0){
@@ -112,7 +116,28 @@ void update(){
       }
     }
     if(moveanim==0){
-      if(up){
+      if(z){
+        int tempx=tilex,tempy=tiley;
+        switch(dir){
+          case 0:{tempy--;break;}
+          case 1:{tempx++;break;}
+          case 2:{tempy++;break;}
+          case 3:{tempx--;break;}
+        }
+        switch(currentmap){
+          case 1:{
+            if(tempx==5&&tempy==2){
+              currentdialogue=0;dialoguesize=2;dialogueprogress=0;
+              char temp[55]="Test dialogue.";
+              strcpy(dialogue[0],temp);
+              char temp2[55]="Even more test stuff";
+              strcpy(dialogue[1],temp2);
+            }
+            break;
+          }
+        }
+      }
+      else if(up){
         if(tilemap[currentmap][tiley-1][tilex]==0)moveanim=8;
         dir=0;
         }
@@ -128,25 +153,7 @@ void update(){
         if(tilemap[currentmap][tiley+1][tilex]==0)moveanim=8;
         dir=2;
         }
-      else if(z){
-        int tempx=tilex,tempy=tiley;
-        switch(dir){
-          case 0:{tempy--;break;}
-          case 1:{tempx++;break;}
-          case 2:{tempy++;break;}
-          case 3:{tempx--;break;}
-        }
-        switch(currentmap){
-          case 1:{
-            if(tempx==5&&tempy==2){
-              currentdialogue=0;dialoguesize=1;dialogueprogress=0;
-              char temp[55]="Test dialogue.";
-              strcpy(dialogue[0],temp);
-            }
-            break;
-          }
-        }
-      }
+      
     }
     if(moveanim==0)walkanim=0;
     if(walkanim>24)playertexturerect.x=playertexturex*72;
