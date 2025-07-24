@@ -4,6 +4,8 @@
 #include <SDL_ttf.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
+#include <stdlib.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -13,10 +15,10 @@ SDL_Texture* playerTexture;
 TTF_Font* font;
 SDL_Texture* txtTexture;
 int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
-bool right=false,up=false,left=false,down=false,running=false;
-char z=0,x=0;
+bool running=false,battle=false;
+char right=0,up=0,left=0,down=0,z=0,x=0,battlemenu=0;
 char dialogue[64][256]={};
-SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect;
+SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect,selectbox={0,0,32,16};
 int lastTick = 0,currentmap=0;
 unsigned char tilemap[5][9][10]={{
   {1,1,1,1,1,1,1,1,1,1},//0
@@ -43,6 +45,7 @@ unsigned char tilemap[5][9][10]={{
 const int interval = 1000; // 1초 간격
 
 int Init(){
+  srand(time(NULL));
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow("Time stops for no one",
   SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160, 144, SDL_WINDOW_RESIZABLE);
@@ -67,6 +70,10 @@ int Init(){
 int inputstuff(){
   if(z>0)z=1;
   if(x>0)x=1;
+  if(left>0)left=1;
+  if(right>0)right=1;
+  if(down>0)down=1;
+  if(up>0)up=1;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
   switch (event.type) {
@@ -74,20 +81,20 @@ int inputstuff(){
   case SDL_QUIT: return 1;
   case SDL_KEYDOWN:
     switch(event.key.keysym.sym){
-        case SDLK_a: case SDLK_LEFT:{left=true;break;}
-        case SDLK_d: case SDLK_RIGHT:{right=true;break;}
-        case SDLK_s: case SDLK_DOWN:{down=true;break;}
-        case SDLK_w: case SDLK_UP:{up=true;break;}
+        case SDLK_a: case SDLK_LEFT:{left=2;break;}
+        case SDLK_d: case SDLK_RIGHT:{right=2;break;}
+        case SDLK_s: case SDLK_DOWN:{down=2;break;}
+        case SDLK_w: case SDLK_UP:{up=2;break;}
         case SDLK_z:{z=2;break;}
         case SDLK_x:{x=2;break;}
     }
     break;
   case SDL_KEYUP:
     switch(event.key.keysym.sym){
-        case SDLK_a: case SDLK_LEFT:{left=false;break;}
-        case SDLK_d: case SDLK_RIGHT:{right=false;break;}
-        case SDLK_s: case SDLK_DOWN:{down=false;break;}
-        case SDLK_w: case SDLK_UP:{up=false;break;}
+        case SDLK_a: case SDLK_LEFT:{left=0;break;}
+        case SDLK_d: case SDLK_RIGHT:{right=0;break;}
+        case SDLK_s: case SDLK_DOWN:{down=0;break;}
+        case SDLK_w: case SDLK_UP:{up=0;break;}
         case SDLK_z:{z=0;break;}
         case SDLK_x:{x=0;break;}
     }
@@ -105,12 +112,22 @@ void update(){
       }
     else if(z==2){dialogueprogress=0;currentdialogue++;}
   }
+  else if(battle){
+    if(right==2)battlemenu++;
+    else if(left==2)battlemenu--;
+    if(battlemenu<0)battlemenu=3;
+    else if(battlemenu>3)battlemenu=0;
+  }
   else{
     if(moveanim>0){
-      if(walkanim>0)walkanim--;
+      if(walkanim>0){
+        if(running)walkanim-=2;
+        else walkanim--;
+        }
       else walkanim=32;
       moveanim--;
       if(moveanim==0){
+        if(rand() % 100>90){battle=true;battlemenu=0;}
         switch(dir){
           case 0:{tiley--;break;}
           case 1:{tilex++;break;}
@@ -141,19 +158,19 @@ void update(){
           }
         }
       }
-      else if(up){
+      else if(up>0){
         if(tilemap[currentmap][tiley-1][tilex]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=0;
         }
-      else if(right){
+      else if(right>0){
         if(tilemap[currentmap][tiley][tilex+1]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=1;
         }
-      else if(left){
+      else if(left>0){
         if(tilemap[currentmap][tiley][tilex-1]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=3;
         }
-      else if(down){
+      else if(down>0){
         if(tilemap[currentmap][tiley+1][tilex]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=2;
         }
@@ -187,35 +204,45 @@ void update(){
 void render(){
   // 배경 새로 그리기
 
-  SDL_SetRenderDrawColor(renderer, 0, 0, 170, 255);
-  SDL_RenderClear(renderer);
-
-  // 사각형 그리기
-  SDL_RenderFillRect(renderer, &playerrect);
-
-  for(int i=0;i<9;i++)
-  for(int j=0;j<10;j++){
-    tilerect.x=j*16;tilerect.y=i*16;
-    if(tilemap[currentmap][i][j]==1){SDL_SetRenderDrawColor(renderer, 85, 85, 255, 255);SDL_RenderFillRect(renderer, &tilerect);}}
-  // 이미지 그리기
-  SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
-
-  if(currentdialogue<dialoguesize){
-    if(tiley>4)dialoguerect.y=0;
-    else dialoguerect.y=96;
+  if(battle){
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(renderer,&dialoguerect);
-
-    char temp[256]={};
-    strcpy(temp,dialogue[currentdialogue]);
-    temp[dialogueprogress+1]='\0';
-    txtSurface = TTF_RenderText_Solid(font, temp, (SDL_Color){ 255, 255, 255, 255 });
-    txtTexture = SDL_CreateTextureFromSurface(renderer, txtSurface);
-    txtRect = (SDL_Rect){ 0, dialoguerect.y, txtSurface->w, txtSurface->h };
-    SDL_RenderCopy(renderer, txtTexture, NULL, &txtRect);
-    SDL_FreeSurface(txtSurface);
+    SDL_RenderClear(renderer);
+    for(int i=0;i<4;i++){
+      selectbox.x=4+40*i;
+      if(i==battlemenu)SDL_SetRenderDrawColor(renderer, 85, 85, 85, 255);
+      else SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+      SDL_RenderFillRect(renderer, &selectbox);
+    }
   }
+  else{
+    SDL_SetRenderDrawColor(renderer, 85, 85, 85, 255);
+    SDL_RenderClear(renderer);
 
+    // 사각형 그리기
+    SDL_RenderFillRect(renderer, &playerrect);
+
+    for(int i=0;i<9;i++)
+    for(int j=0;j<10;j++){
+      tilerect.x=j*16;tilerect.y=i*16;
+      if(tilemap[currentmap][i][j]==1){SDL_SetRenderDrawColor(renderer, 170, 170, 170, 255);SDL_RenderFillRect(renderer, &tilerect);}}
+    // 이미지 그리기
+    SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
+  }
+  if(currentdialogue<dialoguesize){
+      if(tiley>4&&battle)dialoguerect.y=0;
+      else dialoguerect.y=96;
+      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+      SDL_RenderFillRect(renderer,&dialoguerect);
+
+      char temp[256]={};
+      strcpy(temp,dialogue[currentdialogue]);
+      temp[dialogueprogress+1]='\0';
+      txtSurface = TTF_RenderText_Solid(font, temp, (SDL_Color){ 255, 255, 255, 255 });
+      txtTexture = SDL_CreateTextureFromSurface(renderer, txtSurface);
+      txtRect = (SDL_Rect){ 0, dialoguerect.y, txtSurface->w, txtSurface->h };
+      SDL_RenderCopy(renderer, txtTexture, NULL, &txtRect);
+      SDL_FreeSurface(txtSurface);
+    }
   // 화면 업데이트
   SDL_RenderPresent(renderer);
 }
