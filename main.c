@@ -12,13 +12,16 @@ SDL_Renderer* renderer;
 SDL_Surface* playerSurface;
 SDL_Surface* txtSurface;
 SDL_Texture* playerTexture;
+SDL_Surface* battleselectsurface;
+SDL_Texture* battleselectTexture;
 TTF_Font* font;
 SDL_Texture* txtTexture;
 int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
-bool running=false,battle=false;
+bool running=false,battle=false,playerturn=true;
 char right=0,up=0,left=0,down=0,z=0,x=0,battlemenu=0;
 char dialogue[64][256]={};
-SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect,selectbox={0,0,32,16};
+SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect,
+selectbox={0,0,32,16},selecttexturebox={0,0,32,16};
 int lastTick = 0,currentmap=0;
 unsigned char tilemap[5][9][10]={{
   {1,1,1,1,1,1,1,1,1,1},//0
@@ -52,11 +55,15 @@ int Init(){
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
   SDL_RenderSetLogicalSize(renderer,160,144);
   playerSurface = IMG_Load("res/char.png");
-  if (playerSurface == NULL) {
+  battleselectsurface = IMG_Load("res/Battlemenu.png");
+  if (playerSurface == NULL||battleselectsurface==NULL) {
   printf("이미지 불러오기 실패\n%s\n", SDL_GetError());
   return 1;
   }
   playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+  battleselectTexture = SDL_CreateTextureFromSurface(renderer, battleselectsurface);
+  SDL_FreeSurface(playerSurface);
+  SDL_FreeSurface(battleselectsurface);
   // 폰트 불러오기
   TTF_Init();
   font = TTF_OpenFont("res/Monocat_6x12.ttf", 12);
@@ -113,10 +120,17 @@ void update(){
     else if(z==2){dialogueprogress=0;currentdialogue++;}
   }
   else if(battle){
-    if(right==2)battlemenu++;
-    else if(left==2)battlemenu--;
-    if(battlemenu<0)battlemenu=3;
-    else if(battlemenu>3)battlemenu=0;
+    if(playerturn){
+      if(right==2)battlemenu++;
+      else if(left==2)battlemenu--;
+      if(battlemenu<0)battlemenu=3;
+      else if(battlemenu>3)battlemenu=0;
+      if(z==2){
+        switch(battlemenu){
+          case 3:{battle=false;break;}
+        }
+      }
+    }
   }
   else{
     if(moveanim>0){
@@ -127,7 +141,7 @@ void update(){
       else walkanim=32;
       moveanim--;
       if(moveanim==0){
-        if(rand() % 100>90){battle=true;battlemenu=0;}
+        if(rand() % 100>97){battle=true;playerturn=true;battlemenu=0;}
         switch(dir){
           case 0:{tiley--;break;}
           case 1:{tilex++;break;}
@@ -136,7 +150,7 @@ void update(){
         }
       }
     }
-    if(moveanim==0){
+    if(moveanim==0&&!battle){
       if(z==2){
         int tempx=tilex,tempy=tiley;
         switch(dir){
@@ -209,17 +223,15 @@ void render(){
     SDL_RenderClear(renderer);
     for(int i=0;i<4;i++){
       selectbox.x=4+40*i;
-      if(i==battlemenu)SDL_SetRenderDrawColor(renderer, 85, 85, 85, 255);
-      else SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-      SDL_RenderFillRect(renderer, &selectbox);
+      selecttexturebox.y=i*16;
+      if(i==battlemenu)selecttexturebox.x=32;
+      else selecttexturebox.x=0;
+      SDL_RenderCopy(renderer, battleselectTexture,&selecttexturebox, &selectbox);
     }
   }
   else{
     SDL_SetRenderDrawColor(renderer, 85, 85, 85, 255);
     SDL_RenderClear(renderer);
-
-    // 사각형 그리기
-    SDL_RenderFillRect(renderer, &playerrect);
 
     for(int i=0;i<9;i++)
     for(int j=0;j<10;j++){
