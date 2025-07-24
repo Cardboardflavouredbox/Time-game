@@ -13,7 +13,8 @@ SDL_Texture* playerTexture;
 TTF_Font* font;
 SDL_Texture* txtTexture;
 int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
-bool right=false,up=false,left=false,down=false,z=false,x=false;
+bool right=false,up=false,left=false,down=false,running=false;
+char z=0,x=0;
 char dialogue[64][256]={};
 SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect;
 int lastTick = 0,currentmap=0;
@@ -64,8 +65,8 @@ int Init(){
 }
 
 int inputstuff(){
-  if(z)z=false;
-  if(x)x=false;
+  if(z>0)z=1;
+  if(x>0)x=1;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
   switch (event.type) {
@@ -77,8 +78,8 @@ int inputstuff(){
         case SDLK_d: case SDLK_RIGHT:{right=true;break;}
         case SDLK_s: case SDLK_DOWN:{down=true;break;}
         case SDLK_w: case SDLK_UP:{up=true;break;}
-        case SDLK_z:{z=true;break;}
-        case SDLK_x:{x=true;break;}
+        case SDLK_z:{z=2;break;}
+        case SDLK_x:{x=2;break;}
     }
     break;
   case SDL_KEYUP:
@@ -87,8 +88,8 @@ int inputstuff(){
         case SDLK_d: case SDLK_RIGHT:{right=false;break;}
         case SDLK_s: case SDLK_DOWN:{down=false;break;}
         case SDLK_w: case SDLK_UP:{up=false;break;}
-        case SDLK_z:{z=false;break;}
-        case SDLK_x:{x=false;break;}
+        case SDLK_z:{z=0;break;}
+        case SDLK_x:{x=0;break;}
     }
   }
   break;
@@ -98,8 +99,11 @@ return 0;
 
 void update(){
   if(currentdialogue<dialoguesize){
-    if(dialogueprogress<strlen(dialogue[currentdialogue]))dialogueprogress++;
-    else if(z){dialogueprogress=0;currentdialogue++;}
+    if(dialogueprogress<strlen(dialogue[currentdialogue])){
+      dialogueprogress++;
+      if(z==2||x>0)dialogueprogress=strlen(dialogue[currentdialogue]);
+      }
+    else if(z==2){dialogueprogress=0;currentdialogue++;}
   }
   else{
     if(moveanim>0){
@@ -116,7 +120,7 @@ void update(){
       }
     }
     if(moveanim==0){
-      if(z){
+      if(z==2){
         int tempx=tilex,tempy=tiley;
         switch(dir){
           case 0:{tempy--;break;}
@@ -138,19 +142,19 @@ void update(){
         }
       }
       else if(up){
-        if(tilemap[currentmap][tiley-1][tilex]==0)moveanim=8;
+        if(tilemap[currentmap][tiley-1][tilex]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=0;
         }
       else if(right){
-        if(tilemap[currentmap][tiley][tilex+1]==0)moveanim=8;
+        if(tilemap[currentmap][tiley][tilex+1]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=1;
         }
       else if(left){
-        if(tilemap[currentmap][tiley][tilex-1]==0)moveanim=8;
+        if(tilemap[currentmap][tiley][tilex-1]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=3;
         }
       else if(down){
-        if(tilemap[currentmap][tiley+1][tilex]==0)moveanim=8;
+        if(tilemap[currentmap][tiley+1][tilex]==0){if(x>0){moveanim=4;running=true;}else {moveanim=8;running=false;}}
         dir=2;
         }
       
@@ -177,8 +181,8 @@ void update(){
   int temp=dir*32;
   temp+=playertexturey*128;
   playertexturerect.y=temp;
-  playerrect.x=tilex*16+2*((dir==3&&moveanim>0)?-8+moveanim:((dir==1&&moveanim>0)?8-moveanim:0))-4;
-  playerrect.y=tiley*16+2*((dir==0&&moveanim>0)?-8+moveanim:((dir==2&&moveanim>0)?8-moveanim:0))-16;
+  playerrect.x=tilex*16+2*((dir==3&&moveanim>0)?-8+moveanim*(running?2:1):((dir==1&&moveanim>0)?8-moveanim*(running?2:1):0))-4;
+  playerrect.y=tiley*16+2*((dir==0&&moveanim>0)?-8+moveanim*(running?2:1):((dir==2&&moveanim>0)?8-moveanim*(running?2:1):0))-16;
 }
 void render(){
   // 배경 새로 그리기
