@@ -14,14 +14,16 @@ SDL_Surface* txtSurface;
 SDL_Texture* playerTexture;
 SDL_Surface* battleselectsurface;
 SDL_Texture* battleselectTexture;
+SDL_Surface* enemySurface;
+SDL_Texture* enemyTexture;
 TTF_Font* font;
 SDL_Texture* txtTexture;
-int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0;
+int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0,enemycode=0;
 bool running=false,battle=false,playerturn=true;
 char right=0,up=0,left=0,down=0,z=0,x=0,battlemenu=0;
 char dialogue[64][256]={};
 SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect,
-selectbox={0,0,32,16},selecttexturebox={0,0,32,16};
+selectbox={0,0,32,16},selecttexturebox={0,0,32,16},enemybox={0,0,0,0};
 int lastTick = 0,currentmap=0;
 unsigned char tilemap[5][9][10]={{
   {1,1,1,1,1,1,1,1,1,1},//0
@@ -46,6 +48,25 @@ unsigned char tilemap[5][9][10]={{
 /* 0 1 2 3 4 5 6 7 8 9*/
 };
 const int interval = 1000; // 1초 간격
+
+int BattleInit(){
+  char temp[256]="res/Enemies/Enemy";
+  char temp2[3]={};
+  sprintf(temp2, "%d", enemycode);
+  strcat(temp,temp2);
+  strcat(temp,".png");
+
+  enemySurface = IMG_Load(temp);
+  if (enemySurface==NULL) {
+  printf("이미지 불러오기 실패\n%s\n", SDL_GetError());
+  return 1;
+  }
+  enemyTexture=SDL_CreateTextureFromSurface(renderer,enemySurface);
+  enemybox = (SDL_Rect){ 80, 64, enemySurface->w, enemySurface->h };
+  enemybox.x-=enemybox.w/2;
+  SDL_FreeSurface(enemySurface);
+  return 0;
+}
 
 int Init(){
   srand(time(NULL));
@@ -111,7 +132,7 @@ int inputstuff(){
 return 0;
 }
 
-void update(){
+int update(){
   if(currentdialogue<dialoguesize){
     if(dialogueprogress<strlen(dialogue[currentdialogue])){
       dialogueprogress++;
@@ -141,7 +162,7 @@ void update(){
       else walkanim=32;
       moveanim--;
       if(moveanim==0){
-        if(rand() % 100>97){battle=true;playerturn=true;battlemenu=0;}
+        if(rand() % 100>97){battle=true;playerturn=true;battlemenu=0;enemycode=0;if(BattleInit())return 1;}
         switch(dir){
           case 0:{tiley--;break;}
           case 1:{tilex++;break;}
@@ -214,6 +235,7 @@ void update(){
   playertexturerect.y=temp;
   playerrect.x=tilex*16+2*((dir==3&&moveanim>0)?-8+moveanim*(running?2:1):((dir==1&&moveanim>0)?8-moveanim*(running?2:1):0))-4;
   playerrect.y=tiley*16+2*((dir==0&&moveanim>0)?-8+moveanim*(running?2:1):((dir==2&&moveanim>0)?8-moveanim*(running?2:1):0))-16;
+  return 0;
 }
 void render(){
   // 배경 새로 그리기
@@ -228,6 +250,8 @@ void render(){
       else selecttexturebox.x=0;
       SDL_RenderCopy(renderer, battleselectTexture,&selecttexturebox, &selectbox);
     }
+    
+    SDL_RenderCopy(renderer, enemyTexture,NULL, &enemybox);
   }
   else{
     SDL_SetRenderDrawColor(renderer, 85, 85, 85, 255);
@@ -264,6 +288,9 @@ void Free(){
   SDL_DestroyWindow(window);
   Mix_CloseAudio();
   SDL_DestroyTexture(txtTexture);
+  SDL_DestroyTexture(playerTexture);
+  SDL_DestroyTexture(battleselectTexture);
+  SDL_DestroyTexture(enemyTexture);
   TTF_CloseFont(font);
   SDL_Quit();
 }
@@ -276,7 +303,7 @@ if(Init())return 0;
   // 입력 처리
   if(inputstuff())return 0;
 
-  update();
+  if(update())return 0;
   render();
   // 60프레임 설정
   SDL_Delay(1000 / 60);
