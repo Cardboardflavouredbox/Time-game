@@ -26,7 +26,7 @@ char right=0,up=0,left=0,down=0,z=0,x=0,battlemenu=0;
 char dialogue[64][256]={};
 SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect,
 selectbox={0,0,32,16},selecttexturebox={0,0,32,16},enemybox={0,0,0,0};
-int lastTick = 0,currentmap=0;
+int lastTick = 0,currentmap=0,enemydamageanim=0,enemyboxx=0;
 struct stats{
   int hp,maxhp,sp,maxsp,atk,def,mind;
 };
@@ -70,6 +70,7 @@ int BattleInit(){
   enemyTexture=SDL_CreateTextureFromSurface(renderer,enemySurface);
   enemybox = (SDL_Rect){ 80, 64, enemySurface->w, enemySurface->h };
   enemybox.x-=enemybox.w/2;
+  enemyboxx=enemybox.x;
   SDL_FreeSurface(enemySurface);
   Mix_PlayMusic(battlemusic, -1);
   switch(enemycode){
@@ -105,6 +106,11 @@ int Init(){
   Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
   battlemusic = Mix_LoadMUS("res/Cigar Smoke.ogg");
     if (battlemusic == NULL) {
+    printf("%s\n", Mix_GetError());
+    return 1;
+    }
+  ping = Mix_LoadWAV("res/Hit.wav");
+    if (ping == NULL) {
     printf("%s\n", Mix_GetError());
     return 1;
     }
@@ -159,7 +165,38 @@ int update(){
   }
   else if(queuedcode>-1){
     switch(queuedcode){
-      case 0:{enemystats.hp-=(playerstats.atk-enemystats.def>0)?playerstats.atk-enemystats.def:0;}
+      case 0:{
+        enemystats.hp-=(playerstats.atk-enemystats.def>0)?playerstats.atk-enemystats.def:0;
+        currentdialogue=0;dialoguesize=1;dialogueprogress=0;
+        char temp[55]=" Damage!";
+        char temp2[55]={};
+        sprintf(temp2, "%d", (playerstats.atk-enemystats.def>0)?playerstats.atk-enemystats.def:0);
+        strcat(temp2,temp);
+        strcpy(dialogue[0],temp2);
+        queuedcode=-1;
+        playerturn=false;
+        break;
+      }
+      case 1:{
+        playerstats.hp-=(enemystats.atk-playerstats.def>0)?enemystats.atk-playerstats.def:0;
+        currentdialogue=0;dialoguesize=1;dialogueprogress=0;
+        char temp[55]=" Damage!";
+        char temp2[55]={};
+        sprintf(temp2, "%d", (enemystats.atk-playerstats.def>0)?enemystats.atk-playerstats.def:0);
+        strcat(temp2,temp);
+        strcpy(dialogue[0],temp2);
+        queuedcode=-1;
+        playerturn=true;
+        break;
+      }
+      case 2:{
+        if(enemydamageanim<1){enemydamageanim=30;Mix_PlayChannel(-1, ping, 0);}
+        else{
+          enemydamageanim--;
+          if(enemydamageanim<1)queuedcode=0;
+        }
+        break;
+      }
     }
   }
   else if(battle){
@@ -174,12 +211,18 @@ int update(){
             currentdialogue=0;dialoguesize=1;dialogueprogress=0;
             char temp[55]="Arthur attacks!";
             strcpy(dialogue[0],temp);
-            queuedcode=0;
+            queuedcode=2;
             break;
           }
           case 3:{battle=false;Mix_FadeOutMusic(500);break;}
         }
       }
+    }
+    else{
+      currentdialogue=0;dialoguesize=1;dialogueprogress=0;
+      char temp[55]="Enemy attacks!";
+      strcpy(dialogue[0],temp);
+      queuedcode=1;
     }
   }
   else{
@@ -285,7 +328,8 @@ void render(){
       else selecttexturebox.x=0;
       SDL_RenderCopy(renderer, battleselectTexture,&selecttexturebox, &selectbox);
     }
-    
+
+    enemybox.x=enemyboxx+enemydamageanim*(enemydamageanim%4>1?1:-1)/6;
     SDL_RenderCopy(renderer, enemyTexture,NULL, &enemybox);
   }
   else{
@@ -300,7 +344,7 @@ void render(){
     SDL_RenderCopy(renderer, playerTexture,&playertexturerect, &playerrect);
   }
   if(currentdialogue<dialoguesize){
-      if(tiley>4&&battle)dialoguerect.y=0;
+      if(tiley>4||battle)dialoguerect.y=0;
       else dialoguerect.y=96;
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
       SDL_RenderFillRect(renderer,&dialoguerect);
@@ -328,6 +372,7 @@ void Free(){
   SDL_DestroyTexture(enemyTexture);
   TTF_CloseFont(font);
   Mix_FreeMusic(battlemusic);
+  Mix_FreeChunk(ping);
   Mix_CloseAudio();
   SDL_Quit();
 }
