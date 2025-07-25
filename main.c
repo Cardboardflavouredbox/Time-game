@@ -20,13 +20,17 @@ TTF_Font* font;
 SDL_Texture* txtTexture;
 Mix_Music* battlemusic;
 Mix_Chunk* ping;
-int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0,enemycode=0;
+int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0,enemycode=0,queuedcode=-1;
 bool running=false,battle=false,playerturn=true;
 char right=0,up=0,left=0,down=0,z=0,x=0,battlemenu=0;
 char dialogue[64][256]={};
 SDL_Rect playerrect = { 0, 0, 24 ,32 },playertexturerect={0,0,24,32},tilerect={0,0,16,16},dialoguerect={0,0,160,48},txtRect,
 selectbox={0,0,32,16},selecttexturebox={0,0,32,16},enemybox={0,0,0,0};
 int lastTick = 0,currentmap=0;
+struct stats{
+  int hp,maxhp,sp,maxsp,atk,def,mind;
+};
+struct stats playerstats={10,10,5,5,4,1,5},enemystats;
 unsigned char tilemap[5][9][10]={{
   {1,1,1,1,1,1,1,1,1,1},//0
   {1,0,0,0,0,0,0,0,0,1},//1
@@ -68,6 +72,9 @@ int BattleInit(){
   enemybox.x-=enemybox.w/2;
   SDL_FreeSurface(enemySurface);
   Mix_PlayMusic(battlemusic, -1);
+  switch(enemycode){
+    case 0:{struct stats tempstats={5,5,0,0,3,0,0};enemystats=tempstats;break;}
+  }
   return 0;
 }
 
@@ -150,6 +157,11 @@ int update(){
       }
     else if(z==2){dialogueprogress=0;currentdialogue++;}
   }
+  else if(queuedcode>-1){
+    switch(queuedcode){
+      case 0:{enemystats.hp-=(playerstats.atk-enemystats.def>0)?playerstats.atk-enemystats.def:0;}
+    }
+  }
   else if(battle){
     if(playerturn){
       if(right==2)battlemenu++;
@@ -158,6 +170,13 @@ int update(){
       else if(battlemenu>3)battlemenu=0;
       if(z==2){
         switch(battlemenu){
+          case 0:{
+            currentdialogue=0;dialoguesize=1;dialogueprogress=0;
+            char temp[55]="Arthur attacks!";
+            strcpy(dialogue[0],temp);
+            queuedcode=0;
+            break;
+          }
           case 3:{battle=false;Mix_FadeOutMusic(500);break;}
         }
       }
@@ -172,7 +191,13 @@ int update(){
       else walkanim=32;
       moveanim--;
       if(moveanim==0){
-        if(rand() % 100>97){battle=true;playerturn=true;battlemenu=0;enemycode=0;if(BattleInit())return 1;}
+        if(rand() % 100>97){
+          battle=true;
+          playerturn=true;
+          battlemenu=0;
+          enemycode=0;
+          if(BattleInit())return 1;
+          }
         switch(dir){
           case 0:{tiley--;break;}
           case 1:{tilex++;break;}
@@ -251,7 +276,7 @@ void render(){
   // 배경 새로 그리기
 
   if(battle){
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 85, 85, 85, 255);
     SDL_RenderClear(renderer);
     for(int i=0;i<4;i++){
       selectbox.x=4+40*i;
