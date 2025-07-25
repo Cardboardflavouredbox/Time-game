@@ -18,6 +18,8 @@ SDL_Surface* enemySurface;
 SDL_Texture* enemyTexture;
 TTF_Font* font;
 SDL_Texture* txtTexture;
+Mix_Music* battlemusic;
+Mix_Chunk* ping;
 int tilex=1,tiley=1,moveanim=0,walkanim=32,dir=0,prevdir=0,playertexturex=1,playertexturey=1,currentdialogue=0,dialoguesize=0,dialogueprogress=0,enemycode=0;
 bool running=false,battle=false,playerturn=true;
 char right=0,up=0,left=0,down=0,z=0,x=0,battlemenu=0;
@@ -65,6 +67,7 @@ int BattleInit(){
   enemybox = (SDL_Rect){ 80, 64, enemySurface->w, enemySurface->h };
   enemybox.x-=enemybox.w/2;
   SDL_FreeSurface(enemySurface);
+  Mix_PlayMusic(battlemusic, -1);
   return 0;
 }
 
@@ -90,8 +93,15 @@ int Init(){
   font = TTF_OpenFont("res/Monocat_6x12.ttf", 12);
   if (font == NULL) {
   printf("폰트 불러오기 실패: %s\n", TTF_GetError());
-  return -1;
+  return 1;
   }
+  Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+  battlemusic = Mix_LoadMUS("res/Cigar Smoke.ogg");
+    if (battlemusic == NULL) {
+    printf("%s\n", Mix_GetError());
+    return 1;
+    }
+  Mix_VolumeMusic(MIX_MAX_VOLUME / 2);
   return 0;
 }
 
@@ -109,12 +119,12 @@ int inputstuff(){
   case SDL_QUIT: return 1;
   case SDL_KEYDOWN:
     switch(event.key.keysym.sym){
-        case SDLK_a: case SDLK_LEFT:{left=2;break;}
-        case SDLK_d: case SDLK_RIGHT:{right=2;break;}
-        case SDLK_s: case SDLK_DOWN:{down=2;break;}
-        case SDLK_w: case SDLK_UP:{up=2;break;}
-        case SDLK_z:{z=2;break;}
-        case SDLK_x:{x=2;break;}
+        case SDLK_a: case SDLK_LEFT:{if(left>0)left=1;else left=2;break;}
+        case SDLK_d: case SDLK_RIGHT:{if(right>0)right=1;else right=2;break;}
+        case SDLK_s: case SDLK_DOWN:{if(down>0)down=1;else down=2;break;}
+        case SDLK_w: case SDLK_UP:{if(up>0)up=1;else up=2;break;}
+        case SDLK_z:{if(z>0)z=1;else z=2;break;}
+        case SDLK_x:{if(x>0)x=1;else x=2;break;}
     }
     break;
   case SDL_KEYUP:
@@ -148,7 +158,7 @@ int update(){
       else if(battlemenu>3)battlemenu=0;
       if(z==2){
         switch(battlemenu){
-          case 3:{battle=false;break;}
+          case 3:{battle=false;Mix_FadeOutMusic(500);break;}
         }
       }
     }
@@ -292,6 +302,8 @@ void Free(){
   SDL_DestroyTexture(battleselectTexture);
   SDL_DestroyTexture(enemyTexture);
   TTF_CloseFont(font);
+  Mix_FreeMusic(battlemusic);
+  Mix_CloseAudio();
   SDL_Quit();
 }
 
